@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kaydedilen Yazılar</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/boxicons@2.0.9/css/boxicons.min.css"
+    />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="profile">
+        <div class="profile-info">
+          <div class="profile-text">
+            <h2>Blog</h2>
+            <hr />
+            <br />
+          </div>
+        </div>
+      </div>
+      <nav class="nav-menu">
+        <a href="blog.html" class="nav-link"
+          ><i class="bx bx-home"></i> Ana Sayfa</a
+        >
+        <a href="profil.html" class="nav-link"
+          ><i class="fas fa-user-circle"></i> Profilim</a
+        >
+        <a href="yazılarım.html" class="nav-link"
+          ><i class="fas fa-edit"></i> Yazılarım</a
+        >
+        <a href="kaydedilenler.html" class="nav-link"
+          ><i class="fas fa-bookmark"></i> Kaydedilenler</a
+        >
+        <a href="yazı.html" class="nav-link"
+          ><i class="bx bx-pencil"></i> Yeni Yazı</a
+        >
+      </nav>
+      <a href="index.html" class="logout-link"
+        ><i class="bx bx-log-out-circle"></i> Çıkış Yap</a
+      >
+      <button class="sidebar-toggle" aria-label="Toggle Sidebar">
+        <i class="bx bx-menu"></i>
+      </button>
+    </aside>
+
+    <main class="main">
+      <div class="profile-container">
+        <h1>Kaydedilenler</h1>
+        <div id="saved-posts-container"></div>
+        <div id="error-message" style="color: red; display: none"></div>
+      </div>
+    </main>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const savedPostsContainer = document.getElementById(
+          "saved-posts-container"
+        );
+        const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+
+        if (!loggedInUser) {
+          window.location.href = "index.html";
+          return;
+        }
+
+        try {
+          const response = await fetch(`/user/${loggedInUser.userID}/saves`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error("Kaydedilen yazılar alınamadı");
+          }
+
+          const savedPosts = await response.json();
+
+          if (savedPosts.length === 0) {
+            savedPostsContainer.innerHTML = "<p>Kaydedilen yazı yok.</p>";
+          } else {
+            savedPosts.forEach((post) => {
+              const postElement = document.createElement("div");
+              postElement.classList.add("post");
+              postElement.innerHTML = `
+                <h2>${post.postTitle}</h2>
+                <p>${post.postDescription} <a href="post.html?id=${
+                post.postID
+              }"></a></p>
+                <p>Kategori: ${post.categoryID}</p>
+                <p>Tarih: ${new Date(post.datee).toLocaleDateString()}</p>
+              `;
+              savedPostsContainer.appendChild(postElement);
+            });
+          }
+        } catch (error) {
+          savedPostsContainer.innerHTML = `<p>${error.message}</p>`;
+        }
+      });
+
+      document
+        .querySelector(".sidebar-toggle")
+        .addEventListener("click", () => {
+          document.querySelector(".sidebar").classList.toggle("collapsed");
+        });
+    </script>
+  </body>
+</html>

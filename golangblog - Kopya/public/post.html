@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Post</title>
+    <link rel="stylesheet" href="post.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/boxicons@2.0.9/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <aside class="sidebar"></aside>
+
+    <main class="main">
+      <article class="post">
+        <h1 id="post-title"></h1>
+        <div id="post-content" class="post-content"></div>
+        <div class="post-meta">
+          <span id="post-author"></span> |
+          <span id="post-date"></span>
+        </div>
+        <h3 class="comments-title">Yorumlar</h3>
+        <div id="comments-container"></div>
+        <textarea id="commentInput" placeholder="Yorum Yap" rows="3"></textarea>
+        <button id="commentButton">Gönder</button>
+      </article>
+    </main>
+
+    <script>
+      const postID = new URLSearchParams(window.location.search).get("id");
+
+      async function fetchPost() {
+        try {
+          const response = await fetch(`/post?id=${postID}`);
+          if (!response.ok) {
+            throw new Error("Yazı alınamadı");
+          }
+          const post = await response.json();
+          console.log(post);
+
+          if (!post.postTitle || !post.postDescription) {
+            throw new Error("Yazı verileri eksik");
+          }
+
+          document.getElementById("post-title").textContent = post.postTitle;
+          document.getElementById("post-content").innerHTML =
+            post.postDescription;
+          document.getElementById(
+            "post-author"
+          ).textContent = `Yazar: ${post.userID}`;
+          document.getElementById("post-date").textContent = `Tarih: ${new Date(
+            post.datee
+          ).toLocaleDateString()}`;
+
+          fetchComments();
+        } catch (error) {
+          console.error("Yazı alınırken hata oluştu:", error);
+        }
+      }
+
+      async function fetchComments() {
+        try {
+          const response = await fetch(`/comment?postID=${postID}`);
+          if (!response.ok) {
+            throw new Error("Yorumlar alınamadı");
+          }
+          const comments = await response.json();
+          const commentsContainer =
+            document.getElementById("comments-container");
+          commentsContainer.innerHTML = "";
+
+          comments.forEach((comment) => {
+            const commentDiv = document.createElement("div");
+            commentDiv.classList.add("comment");
+            commentDiv.innerHTML = `
+              <strong>Kullanıcı ${comment.userID}:</strong>
+              <div class="comment-content">${comment.commentt}</div>
+              <div class="comment-time">${new Date(
+                comment.datee
+              ).toLocaleString()}</div>
+            `;
+            commentsContainer.appendChild(commentDiv);
+          });
+        } catch (error) {
+          console.error("Yorumlar alınamadı:", error);
+        }
+      }
+
+      async function submitComment() {
+        const commentInput = document.getElementById("commentInput");
+        const commentText = commentInput.value;
+
+        if (!commentText) {
+          alert("Lütfen yorumunuzu girin.");
+          return;
+        }
+
+        try {
+          const response = await fetch("/comment", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({
+              commentt: commentText,
+              postID: parseInt(postID),
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Yorum eklenemedi: ${errorText}`);
+          }
+
+          commentInput.value = "";
+          await fetchComments();
+        } catch (error) {
+          console.error("Yorum eklenirken hata oluştu:", error);
+        }
+      }
+
+      document
+        .getElementById("commentButton")
+        .addEventListener("click", submitComment);
+
+      fetchPost();
+    </script>
+  </body>
+</html>

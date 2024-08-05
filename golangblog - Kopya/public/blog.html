@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/boxicons@2.0.9/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="profile">
+        <div class="profile-info">
+          <div class="profile-text">
+            <h2>Blog</h2>
+            <hr />
+            <br />
+          </div>
+        </div>
+      </div>
+      <nav class="nav-menu">
+        <a href="blog.html" class="nav-link"
+          ><i class="bx bx-home"></i> Ana Sayfa</a
+        >
+        <a href="profil.html" class="nav-link"
+          ><i class="fas fa-user-circle"></i> Profilim</a
+        >
+        <a href="yazılarım.html" class="nav-link"
+          ><i class="fas fa-edit"></i> Yazılarım</a
+        >
+        <a href="kaydedilenler.html" class="nav-link"
+          ><i class="fas fa-bookmark"></i> Kaydedilenler</a
+        >
+        <a href="yazı.html" class="nav-link"
+          ><i class="bx bx-pencil"></i> Yeni Yazı</a
+        >
+      </nav>
+      <a href="index.html" class="logout-link"
+        ><i class="bx bx-log-out-circle"></i> Çıkış Yap</a
+      >
+      <button class="sidebar-toggle" aria-label="Toggle Sidebar">
+        <i class="bx bx-menu"></i>
+      </button>
+    </aside>
+
+    <main class="main">
+      <div class="categories">
+        <h2>Kategoriler</h2>
+        <div class="categories-scroll">
+          <ul id="categories-list"></ul>
+        </div>
+      </div>
+      <div id="posts-container"></div>
+    </main>
+
+    <script>
+      async function fetchCategories() {
+        try {
+          const response = await fetch("/category");
+          if (!response.ok) {
+            throw new Error("Ağ yanıtı yok");
+          }
+          const categories = await response.json();
+          const categoriesList = document.getElementById("categories-list");
+          categoriesList.innerHTML = "";
+
+          categories.forEach((category) => {
+            const li = document.createElement("li");
+            const a = document.createElement("a");
+            a.href = "#";
+            a.textContent = category.categoryName;
+            a.dataset.categoryId = category.categoryID;
+            li.appendChild(a);
+            categoriesList.appendChild(li);
+          });
+
+          document.querySelectorAll("#categories-list a").forEach((link) => {
+            link.addEventListener("click", (event) => {
+              event.preventDefault();
+              const categoryID = link.dataset.categoryId;
+              fetchPosts(categoryID);
+            });
+          });
+        } catch (error) {
+          console.error("Kategori verileri alınamadı:", error);
+        }
+      }
+
+      async function fetchPosts(categoryID = "") {
+        try {
+          let url = "/post";
+          if (categoryID) {
+            url += `?categoryID=${categoryID}`;
+          }
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error("Ağ yanıtı yok");
+          }
+          const posts = await response.json();
+          const postsContainer = document.getElementById("posts-container");
+          postsContainer.innerHTML = "";
+
+          posts.forEach((post) => {
+            const article = document.createElement("article");
+            article.classList.add("post");
+
+            const title = document.createElement("h2");
+            title.classList.add("post-title");
+            title.textContent = post.postTitle;
+
+            const description = document.createElement("p");
+            description.classList.add("post-description");
+            description.textContent = post.postDescription;
+
+            const meta = document.createElement("div");
+            meta.classList.add("post-meta");
+            meta.innerHTML = `
+                <span>Yazar: ${post.userID}</span> | 
+                <span>Tarih: ${new Date(
+                  post.datee
+                ).toLocaleDateString()}</span> | 
+                <span>Kategori: ${post.categoryID || "No Category"}</span> | 
+                <span>Etiketler: ${
+                  post.tags.length
+                    ? post.tags.map((tag) => tag.tagName).join(", ")
+                    : "No Tags"
+                }</span>
+            `;
+
+            const readMoreButton = document.createElement("button");
+            readMoreButton.classList.add("read-more-button");
+            readMoreButton.textContent = "Devamını Oku";
+            readMoreButton.onclick = () => {
+              window.location.href = `post.html?id=${post.postID}`;
+            };
+
+            article.appendChild(title);
+            article.appendChild(description);
+            article.appendChild(meta);
+            article.appendChild(readMoreButton);
+
+            postsContainer.appendChild(article);
+          });
+        } catch (error) {
+          console.error("Failed to fetch posts:", error);
+        }
+      }
+
+      fetchCategories();
+      fetchPosts();
+
+      document
+        .querySelector(".sidebar-toggle")
+        .addEventListener("click", () => {
+          document.querySelector(".sidebar").classList.toggle("collapsed");
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yazıyı Düzenle</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/boxicons@2.0.9/css/boxicons.min.css"
+    />
+    <link rel="stylesheet" href="editpost.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="profile">
+        <div class="profile-info">
+          <div class="profile-text">
+            <h2>Blog</h2>
+            <hr />
+            <br />
+          </div>
+        </div>
+      </div>
+      <nav class="nav-menu">
+        <a href="blog.html" class="nav-link"
+          ><i class="bx bx-home"></i> <span>Ana Sayfa</span></a
+        >
+        <a href="profil.html" class="nav-link"
+          ><i class="fas fa-user-circle"></i> <span>Profilim</span></a
+        >
+        <a href="yazılarım.html" class="nav-link"
+          ><i class="fas fa-edit"></i> <span>Yazılarım</span></a
+        >
+        <a href="kaydedilenler.html" class="nav-link"
+          ><i class="fas fa-bookmark"></i> <span>Kaydedilenler</span></a
+        >
+        <a href="yazı.html" class="nav-link"
+          ><i class="bx bx-pencil"></i> <span>Yeni Yazı</span></a
+        >
+      </nav>
+      <a href="index.html" class="logout-link"
+        ><i class="bx bx-log-out-circle"></i> <span>Çıkış Yap</span></a
+      >
+      <button class="sidebar-toggle" aria-label="Toggle Sidebar">
+        <i class="bx bx-menu"></i>
+      </button>
+    </aside>
+
+    <main class="main">
+      <div class="profile-container">
+        <h1>Yazıyı Düzenle</h1>
+        <form id="edit-post-form">
+          <div class="form-group">
+            <label for="postTitle">Başlık:</label>
+            <input type="text" id="postTitle" name="postTitle" required />
+          </div>
+          <div class="form-group">
+            <label for="postDescription">Açıklama:</label>
+            <textarea
+              id="postDescription"
+              name="postDescription"
+              rows="4"
+              required
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="categoryID">Kategori:</label>
+            <select id="categoryID" name="categoryID" required></select>
+          </div>
+          <button type="submit" class="btn">Güncelle</button>
+        </form>
+        <div id="error-message" style="color: red; display: none"></div>
+      </div>
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const postID = urlParams.get("id");
+
+        if (!postID) {
+          console.error("Geçersiz yazı ID");
+          document.getElementById("error-message").innerText =
+            "Geçersiz yazı ID";
+          document.getElementById("error-message").style.display = "block";
+          return;
+        }
+
+        const form = document.getElementById("edit-post-form");
+        const postTitleInput = document.getElementById("postTitle");
+        const postDescriptionInput = document.getElementById("postDescription");
+        const categorySelect = document.getElementById("categoryID");
+
+        try {
+          console.log("Fetching post data...");
+          const response = await fetch(`/post/${postID}`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(
+              `Yazı bilgileri alınamadı: ${response.status} - ${errorText}`
+            );
+          }
+
+          const post = await response.json();
+          console.log("Post data received:", post);
+
+          postTitleInput.value = post.postTitle || "";
+          postDescriptionInput.value = post.postDescription || "";
+          categorySelect.value = post.categoryID || "";
+
+          console.log("Fetching categories...");
+          const categoriesResponse = await fetch(`/category`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+
+          if (!categoriesResponse.ok) {
+            const errorText = await categoriesResponse.text();
+            throw new Error(
+              `Kategoriler alınamadı: ${categoriesResponse.status} - ${errorText}`
+            );
+          }
+
+          const categories = await categoriesResponse.json();
+          console.log("Categories received:", categories);
+          categories.forEach((category) => {
+            const option = document.createElement("option");
+            option.value = category.categoryID;
+            option.textContent = category.categoryName;
+            categorySelect.appendChild(option);
+          });
+
+          categorySelect.value = post.categoryID;
+        } catch (error) {
+          console.error("Error:", error);
+          document.getElementById("error-message").innerText = error.message;
+          document.getElementById("error-message").style.display = "block";
+        }
+
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+
+          const updatedPost = {
+            postTitle: postTitleInput.value,
+            postDescription: postDescriptionInput.value,
+            categoryID: parseInt(categorySelect.value),
+          };
+
+          try {
+            const response = await fetch(`/post/${postID}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify(updatedPost),
+            });
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(
+                `Yazı güncellenemedi: ${response.status} - ${errorText}`
+              );
+            }
+
+            window.location.href = "yazılarım.html";
+          } catch (error) {
+            console.error("Error:", error);
+            document.getElementById("error-message").innerText = error.message;
+            document.getElementById("error-message").style.display = "block";
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

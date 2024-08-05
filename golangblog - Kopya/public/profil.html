@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profilim</title>
+    <link rel="stylesheet" href="profil.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/boxicons@2.0.9/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="profile">
+        <div class="profile-info">
+          <div class="profile-text">
+            <h2>Blog</h2>
+            <hr />
+            <br />
+          </div>
+        </div>
+      </div>
+      <nav class="nav-menu">
+        <a href="blog.html" class="nav-link"
+          ><i class="bx bx-home"></i> Ana Sayfa</a
+        >
+        <a href="profil.html" class="nav-link"
+          ><i class="fas fa-user-circle"></i> Profilim</a
+        >
+        <a href="yazılarım.html" class="nav-link"
+          ><i class="fas fa-edit"></i> Yazılarım</a
+        >
+        <a href="kaydedilenler.html" class="nav-link"
+          ><i class="fas fa-bookmark"></i> Kaydedilenler</a
+        >
+        <a href="yazı.html" class="nav-link"
+          ><i class="bx bx-pencil"></i> Yeni Yazı</a
+        >
+      </nav>
+      <a href="index.html" class="logout-link"
+        ><i class="bx bx-log-out-circle"></i> Çıkış Yap</a
+      >
+      <button class="sidebar-toggle" aria-label="Toggle Sidebar">
+        <i class="bx bx-menu"></i>
+      </button>
+    </aside>
+    <main class="main">
+      <div class="profile-container">
+        <h1>Profilim</h1>
+        <div class="profile-details">
+          <div class="profile-info">
+            <label for="username">Kullanıcı Adı:</label>
+            <input type="text" id="username" />
+
+            <label for="email">E-posta:</label>
+            <input type="email" id="email" />
+
+            <label for="password">Şifre:</label>
+            <input type="password" id="password" />
+            <button id="save-btn">Değişiklikleri Kaydet</button>
+            <div id="error-message" style="color: red; display: none"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script>
+      async function fetchUserProfile() {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          window.location.href = "index.html";
+          return;
+        }
+
+        try {
+          const response = await fetch("/profile", {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error("Kullanıcı bilgileri alınamadı");
+          }
+
+          const user = await response.json();
+          document.getElementById("username").value = user.userName;
+          document.getElementById("email").value = user.eMail;
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      document
+        .getElementById("save-btn")
+        .addEventListener("click", async () => {
+          const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+          if (!loggedInUser) {
+            window.location.href = "index.html";
+            return;
+          }
+
+          const username = document.getElementById("username").value;
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+
+          if (!username || !email) {
+            document.getElementById("error-message").textContent =
+              "Kullanıcı adı ve e-posta boş olamaz.";
+            document.getElementById("error-message").style.display = "block";
+            return;
+          }
+
+          try {
+            const response = await fetch("/profile/update", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({
+                userName: username,
+                eMail: email,
+                userPassword: password,
+              }),
+            });
+
+            const result = await response.json();
+            if (!response.ok) {
+              throw new Error(result.error || "Ağ yanıtı yok");
+            }
+
+            localStorage.setItem("loggedInUser", JSON.stringify(result));
+            alert("Profil güncellendi.");
+            window.location.href = "index.html";
+          } catch (error) {
+            document.getElementById(
+              "error-message"
+            ).textContent = `Profil güncellenirken hata oluştu: ${error.message}`;
+            document.getElementById("error-message").style.display = "block";
+          }
+        });
+
+      fetchUserProfile();
+
+      document
+        .querySelector(".sidebar-toggle")
+        .addEventListener("click", () => {
+          document.querySelector(".sidebar").classList.toggle("collapsed");
+        });
+    </script>
+  </body>
+</html>

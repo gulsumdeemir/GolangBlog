@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="header-bar">
+      <div class="header-content">
+        <div class="logo">
+          <a href="index.html">Blog</a>
+        </div>
+        <nav class="nav-menu">
+          <a href="index.html"> <i class="bx bx-pencil"></i> Yazmaya Başla </a>
+          <a href="index.html">
+            <i class="bx bx-book-reader"></i> Okumaya Başla
+          </a>
+          <a href="kayıt.html" class="register-link"
+            ><i class="bx bx-user-circle"></i>Kayıt Ol</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <div class="wrapper">
+      <h1>Hoşgeldiniz!</h1>
+      <form id="login-form">
+        <div class="input-box">
+          <input type="email" id="email" placeholder="Mail" required />
+          <i class="bx bxs-envelope"></i>
+        </div>
+
+        <div class="input-box">
+          <input
+            type="text"
+            id="username"
+            placeholder="Kullanıcı Adı"
+            required
+          />
+          <i class="bx bxs-user"></i>
+        </div>
+        <div class="input-box">
+          <input type="password" id="password" placeholder="Şifre" required />
+          <i class="bx bxs-lock-alt"></i>
+        </div>
+        <div class="remember-forgot">
+          <label><input type="checkbox" /> Beni Hatırla</label>
+          <a href="#">Şifreni mi unuttun?</a>
+        </div>
+        <button type="submit" class="btn">Giriş</button>
+      </form>
+      <div class="register-link">
+        <p>Henüz bir hesabın yok mu? <a href="kayıt.html">Oluştur</a></p>
+      </div>
+      <p id="error-message" style="color: red; display: none">
+        Geçersiz kullanıcı adı, mail veya şifre!
+      </p>
+    </div>
+
+    <script src="login.js"></script>
+  </body>
+</html>
